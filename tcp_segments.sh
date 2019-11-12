@@ -1,41 +1,40 @@
 #!/bin/bash
 # save tcp segments received and transmitted every 5 seconds
 
+#if the file does not exist, start file
+FILE=/home/ssuee/5hw_11_11/tcp_segments.txt
+if test ! -f "$FILE"; then
+    
+    printf '1,' >> tcp_segments.txt #append a comma
 
-i="0"
-rm tcp_segments.txt
-printf 'iteration,received,sent out\n' >> tcp_segments.txt
+    # append received
+    netstat --statistics -t | grep Tcp -A 10 | grep segment | cut -d" " -f5 | awk 'BEGIN{ RS = "" ; FS = "\n" }{printf $1}' >> tcp_segments.txt 
 
-while [ $i -lt 10 ]
-do
+    printf ',' >> tcp_segments.txt #append a comma
 
-i=$[$i+1]
-
-printf $i #debug
-
-printf $i >> tcp_segments.txt
-printf ',' >> tcp_segments.txt
-
-# received
-#netstat --statistics -t | grep Tcp -A 10 | grep segment | cut -d$'\n' -f1 | cut -d' ' -f5 >> tcp_segments.txt 
+    # append sent out
+    netstat --statistics -t | grep Tcp -A 10 | grep segment | cut -d" " -f5 | awk 'BEGIN{ RS = "" ; FS = "\n" }{printf $2}' >> tcp_segments.txt 
 
 
+    printf '\n' >> tcp_segments.txt #append a newline
+fi
+
+#get last iteration #
+expr $(tail tcp_segments.txt -n1 | awk 'BEGIN{ FS = "," }{printf $1}') + 1 >> tcp_segments.txt
+
+#remove last newline (last byte)
+truncate -s -1 tcp_segments.txt 
+
+
+printf ',' >> tcp_segments.txt #append a comma
+
+# append received
 netstat --statistics -t | grep Tcp -A 10 | grep segment | cut -d" " -f5 | awk 'BEGIN{ RS = "" ; FS = "\n" }{printf $1}' >> tcp_segments.txt 
 
+printf ',' >> tcp_segments.txt #append a comma
 
-printf ',' >> tcp_segments.txt
-
-#sent out
-#netstat --statistics -t | grep Tcp -A 10 | grep segment | cut -d$'\n' -f2 | cut -d' ' -f5 >> tcp_segments.txt 
-
+# append sent out
 netstat --statistics -t | grep Tcp -A 10 | grep segment | cut -d" " -f5 | awk 'BEGIN{ RS = "" ; FS = "\n" }{printf $2}' >> tcp_segments.txt 
 
 
-#printf ',' >> tcp_segments.txt
-printf '\n' >> tcp_segments.txt
- 
-sleep 5
-
-
-
-done
+printf '\n' >> tcp_segments.txt #append a newline
